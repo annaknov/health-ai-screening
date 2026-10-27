@@ -1,0 +1,513 @@
+<title>Health AI Screening Report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Concept: a regulatory briefing memo. Navy masthead, numbered sections, hairline rules, square status tags. */
+:root{
+  --bg:#F4F7FB; --surface:#FFFFFF; --surface-2:#E8EFF7; --ink:#0D1F36; --muted:#506580; --line:#D3DEEA; --line-strong:#9FB5CC;
+  --navy:#0B2A4A; --navy-deep:#071C33; --on-navy:#EAF2FB; --on-navy-muted:#A9C2DD;
+  --sky:#8DBDEB; --sky-soft:#DCEAF7; --link:#14518F;
+  --tag-solid-bg:#0B2A4A; --tag-solid-fg:#FFFFFF;
+  --font:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#08141F; --surface:#0F2338; --surface-2:#153252; --ink:#E6EFF9; --muted:#A3B8CF; --line:#22405F; --line-strong:#3D6189;
+    --navy:#0C2B4D; --navy-deep:#050F1A; --on-navy:#EAF2FB; --on-navy-muted:#A9C2DD;
+    --sky:#8DBDEB; --sky-soft:#17395C; --link:#9CC8F0;
+    --tag-solid-bg:#8DBDEB; --tag-solid-fg:#071C33; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#08141F; --surface:#0F2338; --surface-2:#153252; --ink:#E6EFF9; --muted:#A3B8CF; --line:#22405F; --line-strong:#3D6189;
+  --navy:#0C2B4D; --navy-deep:#050F1A; --on-navy:#EAF2FB; --on-navy-muted:#A9C2DD;
+  --sky:#8DBDEB; --sky-soft:#17395C; --link:#9CC8F0;
+  --tag-solid-bg:#8DBDEB; --tag-solid-fg:#071C33; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:400 15.5px/1.6 var(--font);font-variant-numeric:tabular-nums;margin:0}
+a{color:var(--link);text-underline-offset:2px;text-decoration-thickness:1px}
+a:focus-visible{outline:2px solid var(--sky);outline-offset:2px}
+h1,h2,h3,h4{font-family:var(--font);margin:0;line-height:1.25;letter-spacing:-.005em}
+p{margin:0}
+.wrap{max-width:980px;margin-inline:auto;padding-inline:16px}
+
+/* Masthead */
+.mast{background:var(--navy);color:var(--on-navy);border-bottom:3px solid var(--sky)}
+.mast .wrap{padding-block:30px 26px}
+.mast .kicker{font-size:13px;font-weight:600;color:var(--sky)}
+.mast h1{font-size:clamp(26px,4.4vw,36px);font-weight:700;color:#fff;margin-top:6px}
+.mast .lede{max-width:70ch;margin-top:10px;font-size:16px;color:var(--on-navy)}
+.mast .meta{margin-top:14px;font-size:13px;color:var(--on-navy-muted);display:flex;flex-wrap:wrap;gap:4px 0}
+.mast .meta span+span::before{content:"|";margin:0 10px;color:rgba(169,194,221,.5)}
+
+/* Navigation */
+.nav{position:sticky;top:0;z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.nav .wrap{display:flex;overflow-x:auto;scrollbar-width:thin}
+.nav a{white-space:nowrap;text-decoration:none;color:var(--muted);font-size:14px;font-weight:500;padding:12px 14px 11px;border-bottom:2px solid transparent}
+.nav a:first-child{padding-left:0}
+.nav a:hover{color:var(--ink);border-bottom-color:var(--sky)}
+.nav a b{color:var(--link);font-weight:600;margin-right:6px}
+
+/* Sections */
+section{padding-block:40px 4px}
+.sec-head{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;align-items:baseline;padding-bottom:10px;border-bottom:2px solid var(--navy);margin-bottom:20px}
+.sec-head .num{font-size:22px;font-weight:700;color:var(--link)}
+.sec-head h2{font-size:22px;font-weight:700}
+.sec-head p{grid-column:2;color:var(--muted);font-size:14px}
+h3.sub{font-size:16px;font-weight:700;margin:30px 0 10px;color:var(--ink)}
+.label{font-size:13px;font-weight:600;color:var(--muted)}
+
+.brief{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--navy);padding:16px 18px;display:grid;gap:12px}
+
+/* Status tags: solid = in effect/given; outline = later date; dashed = conditional/depends/inferred/guidance; grey = flags and non-law */
+.tag{display:inline-block;font-size:12px;font-weight:600;line-height:1;padding:5px 7px;border-radius:2px;white-space:nowrap}
+.t-solid{background:var(--tag-solid-bg);color:var(--tag-solid-fg)}
+.t-out{border:1px solid var(--link);color:var(--link);padding:4px 6px}
+.t-soft{background:var(--sky-soft);color:var(--ink);border:1px dashed var(--link);padding:4px 6px}
+.t-flag{color:var(--muted);border:1px solid var(--line-strong);padding:4px 6px}
+.tags{display:flex;flex-wrap:wrap;gap:5px}
+
+/* Ranked laws */
+.laws{border-top:1px solid var(--line)}
+.law{display:grid;grid-template-columns:40px 1fr;gap:0 14px;padding:16px 0;border-bottom:1px solid var(--line)}
+.law .rank{font-size:22px;font-weight:700;color:var(--link);line-height:1.2}
+.law h3{font-size:16.5px;font-weight:700}
+.law .head{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-bottom:8px}
+.law dl{display:grid;grid-template-columns:140px 1fr;gap:6px 16px;margin:0}
+.law dt{font-size:13px;font-weight:600;color:var(--muted)}
+.law dd{margin:0;min-width:0}
+.law > div{min-width:0}
+
+/* Top risks */
+.top-risks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--navy-deep);border:1px solid var(--navy-deep)}
+.tr{background:var(--navy);color:var(--on-navy);padding:16px 18px;display:grid;gap:8px;align-content:start}
+.tr .label{color:var(--sky)}
+.tr h3{font-size:16px;font-weight:700;color:#fff}
+.tr p{font-size:14.5px}
+.tr .first{border-top:1px solid rgba(141,189,235,.35);padding-top:8px}
+
+/* Facts and watch */
+.facts{margin:0;padding:0;list-style:none;border-top:1px solid var(--line);counter-reset:fact}
+.facts li{display:grid;grid-template-columns:28px 1fr auto;gap:4px 12px;align-items:baseline;padding:11px 0;border-bottom:1px solid var(--line);counter-increment:fact}
+.facts li::before{content:counter(fact);font-weight:700;color:var(--link)}
+.watch{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.watch div{border:1px dashed var(--line-strong);padding:12px 14px;background:var(--surface)}
+
+/* Detail notes */
+.notes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.note{background:var(--surface);border:1px solid var(--line);padding:14px 16px;display:grid;gap:8px;align-content:start}
+.note p{font-size:14.5px}
+.note strong{font-weight:700}
+
+/* Risks */
+.theme h3{font-size:15px;font-weight:700;color:var(--link);margin:28px 0 10px}
+.risk{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--navy);padding:14px 18px;margin-bottom:10px}
+.risk .rhead{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-bottom:10px}
+.risk h4{font-size:16px;font-weight:700}
+.rgrid{display:grid;grid-template-columns:130px 1fr;gap:8px 16px}
+.rgrid > div{min-width:0}
+.risk ul{margin:0;padding-left:18px;display:grid;gap:3px}
+.compact{background:var(--surface);border:1px solid var(--line);padding:14px 18px;display:grid;gap:10px}
+.compact p{display:grid;grid-template-columns:160px 1fr;gap:4px 16px}
+.gov{display:flex;flex-wrap:wrap;gap:6px}
+
+/* Tables */
+.tbl{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--line)}
+.tbl th,.tbl td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl th{font-size:13px;font-weight:600;color:var(--muted);background:var(--surface-2)}
+.tbl tr:last-child td{border-bottom:0}
+.tbl td p+p{margin-top:6px}
+.tbl .case{font-weight:700}
+.tbl .sub-meta{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+.tblwrap{overflow-x:auto}
+.legend{font-size:13px;color:var(--muted);margin-top:10px}
+
+.assume{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.assume li{display:grid;grid-template-columns:90px 1fr;gap:12px;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--line)}
+
+footer{margin-top:48px;background:var(--navy-deep);color:var(--on-navy-muted)}
+footer .wrap{padding-block:22px;display:grid;gap:6px;font-size:13.5px}
+footer b{color:var(--on-navy);font-weight:600}
+
+@media (max-width:700px){
+  .top-risks,.watch,.notes{grid-template-columns:1fr}
+  .law{grid-template-columns:1fr}
+  .law dl,.rgrid,.compact p{grid-template-columns:1fr;gap:2px}
+  .law dd,.rgrid > div:nth-child(even){margin-bottom:8px}
+  .facts li{grid-template-columns:24px 1fr}
+  .facts li .tag{grid-column:2;justify-self:start}
+  .assume li{grid-template-columns:1fr;gap:4px}
+  .mast .meta{gap:2px 14px}
+  .mast .meta span+span::before{content:none}
+  .cases thead{display:none}
+  .cases tr,.cases td{display:block;width:auto!important}
+  .cases tr{border-bottom:1px solid var(--line);padding:6px 0}
+  .cases td{border-bottom:0;padding:6px 14px}
+  .cases td[data-h]::before{content:attr(data-h);display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:2px}
+}
+@media (prefers-reduced-motion:no-preference){ html{scroll-behavior:smooth} }
+</style>
+
+<header class="mast">
+  <div class="wrap">
+    <div class="kicker">Health AI screening</div>
+    <h1>Coverage and member-messaging tool</h1>
+    <p class="lede">A provider-built tool that handles coverage and prior authorization, writes to members, uses a predictive model fine-tuned from a vendor model, and runs open-ended chat that records conversations.</p>
+    <div class="meta"><span>8 October 2026</span><span>California and federal law</span><span>ACA Marketplace lines</span><span>Substance use disorder records</span></div>
+  </div>
+</header>
+
+<nav class="nav" aria-label="Report sections">
+  <div class="wrap">
+    <a href="#summary"><b>1</b>Summary</a>
+    <a href="#laws"><b>2</b>Laws in detail</a>
+    <a href="#risks"><b>3</b>Risks and edits</a>
+    <a href="#cases"><b>4</b>Real-world cases</a>
+    <a href="#na"><b>5</b>Not applicable</a>
+    <a href="#assumed"><b>6</b>What I assumed</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+<section id="summary">
+  <div class="sec-head"><span class="num">1</span><h2>Summary</h2></div>
+
+  <div class="brief">
+    <div>
+      <div class="label">The tool as understood</div>
+      <p>A tool built in-house by a provider that handles coverage and prior authorization and writes to members. It uses a predictive model fine-tuned from a vendor model, with open-ended chat that records conversations, acting automatically on substance use disorder records.</p>
+    </div>
+    <div>
+      <div class="label">Assumption that matters most</div>
+      <p>Your answers conflict on human control. The tool "acts automatically," yet a clinician "always" reviews patient messages. This report treats both as true: coverage actions are automatic, and patient messages are reviewed.</p>
+    </div>
+  </div>
+
+  <h3 class="sub">Most relevant laws</h3>
+  <div class="laws">
+
+    <article class="law">
+      <div class="rank">1</div>
+      <div>
+        <div class="head">
+          <h3><a href="https://www.ecfr.gov/current/title-45/section-92.210">45 CFR 92.210, ACA Section 1557</a></h3>
+          <div class="tags"><span class="tag t-solid">In effect</span></div>
+        </div>
+        <dl>
+          <dt>Why it applies</dt><dd>You take federal funds through ACA Marketplace lines, and your model uses race, age, sex, language, zip code, and insurance type as inputs.</dd>
+          <dt>Main obligation</dt><dd>Identify which inputs measure protected traits and make reasonable efforts to reduce discrimination risk. The identify-and-mitigate duties have applied since 2025-05-01.</dd>
+        </dl>
+      </div>
+    </article>
+
+    <article class="law">
+      <div class="rank">2</div>
+      <div>
+        <div class="head">
+          <h3><a href="https://www.ecfr.gov/current/title-45/part-164">HIPAA Privacy Rule</a></h3>
+          <div class="tags"><span class="tag t-solid">In effect</span></div>
+        </div>
+        <dl>
+          <dt>Why it applies</dt><dd>You are a covered provider handling claims and records. The Security and Breach Notification Rules also apply.</dd>
+          <dt>Main obligation</dt><dd>Limit uses to treatment, payment, and operations. Sign business associate agreements with the vendor behind your base model.</dd>
+        </dl>
+      </div>
+    </article>
+
+    <article class="law">
+      <div class="rank">3</div>
+      <div>
+        <div class="head">
+          <h3><a href="https://www.federalregister.gov/documents/2024/02/16/2024-02544/confidentiality-of-substance-use-disorder-sud-patient-records">42 CFR Part 2</a></h3>
+          <div class="tags"><span class="tag t-solid">In effect since 2026-02-16</span><span class="tag t-soft">Conditional</span></div>
+        </div>
+        <dl>
+          <dt>Why it applies</dt><dd>Your model takes substance use disorder records.</dd>
+          <dt>Main obligation</dt><dd>Get patient consent before using or disclosing the records, and limit redisclosure.</dd>
+          <dt>Conditional on</dt><dd>Your organization holding itself out as providing substance use disorder treatment and being federally assisted.</dd>
+        </dl>
+      </div>
+    </article>
+
+    <article class="law">
+      <div class="rank">4</div>
+      <div>
+        <div class="head">
+          <h3><a href="https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=PEN&amp;sectionNum=632">California Invasion of Privacy Act, Pen. Code 632</a></h3>
+          <div class="tags"><span class="tag t-solid">In effect</span><span class="tag t-flag">Partially verified</span><span class="tag t-soft">Conditional</span></div>
+        </div>
+        <dl>
+          <dt>Why it applies</dt><dd>Your tool "records or transcribes conversations."</dd>
+          <dt>Main obligation</dt><dd>Every participant must consent before recording starts. Civil damages are $5,000 per violation.</dd>
+          <dt>Conditional on</dt><dd>The conversations being confidential.</dd>
+        </dl>
+      </div>
+    </article>
+
+    <article class="law">
+      <div class="rank">5</div>
+      <div>
+        <div class="head">
+          <h3><a href="https://leginfo.legislature.ca.gov/faces/billNavClient.xhtml?bill_id=202520260SB243">SB 243, companion chatbots</a></h3>
+          <div class="tags"><span class="tag t-solid">In effect since 2026-01-01</span><span class="tag t-out">Reporting from 2027-07-01</span><span class="tag t-soft">Conditional</span></div>
+        </div>
+        <dl>
+          <dt>Why it applies</dt><dd>Your "open-ended chat" could become ongoing and supportive.</dd>
+          <dt>Main obligation</dt><dd>Disclose that the chatbot is AI, and publish a protocol for suicidal ideation and self-harm, with crisis-line referrals.</dd>
+          <dt>Conditional on</dt><dd>The chat being a companion-style bot rather than customer service.</dd>
+        </dl>
+      </div>
+    </article>
+  </div>
+
+  <h3 class="sub">Top risks to address</h3>
+  <div class="top-risks">
+    <div class="tr"><div class="label">Bias and fairness</div><h3>A stand-in target</h3><p>The model learns who got care before, not who needs it.</p><p class="first"><b>First step:</b> compare its scores with a direct clinical measure by race, sex, age, language, and payer.</p></div>
+    <div class="tr"><div class="label">Human oversight</div><h3>No one can stop it</h3><p>Automatic coverage actions reach members before anyone reviews them.</p><p class="first"><b>First step:</b> require a qualified person to review every adverse action.</p></div>
+    <div class="tr"><div class="label">Bias and fairness</div><h3>Tested on overall accuracy only</h3><p>Overall numbers can hide higher error rates for some groups.</p><p class="first"><b>First step:</b> report error rates by subgroup before go-live.</p></div>
+  </div>
+
+  <h3 class="sub">Answers that would change the result</h3>
+  <ul class="facts">
+    <li><p>Does a person review before any denial or delay?</p><span class="tag t-soft">Human-oversight risk · Section 1557 duties</span></li>
+    <li><p>Does your organization hold itself out as a substance use treatment program, and is it federally assisted?</p><span class="tag t-soft">42 CFR Part 2</span></li>
+    <li><p>Is the chat open-ended and relationship-building, or customer service?</p><span class="tag t-soft">SB 243 · dependence risk</span></li>
+  </ul>
+
+  <h3 class="sub">Watch</h3>
+  <div class="watch">
+    <div><span class="tag t-flag">Died · partially verified</span><p style="margin-top:8px"><a href="https://leginfo.legislature.ca.gov/faces/billNavClient.xhtml?bill_id=202520260AB1018">AB 1018</a> would have required notices for AI-driven health insurance decisions. Not law, but it signals where policy is heading.</p></div>
+    <div><span class="tag t-flag">Proposed</span><p style="margin-top:8px"><a href="https://www.federalregister.gov/documents/2026/04/14/2026-07205/medicare-and-medicaid-programs-patient-protection-and-affordable-care-act-interoperability-standards">CMS drug prior-authorization rule</a> would extend electronic prior authorization to drugs. Not in force.</p></div>
+  </div>
+</section>
+
+<section id="laws">
+  <div class="sec-head"><span class="num">2</span><h2>Laws in detail</h2><p>What the summary left out.</p></div>
+
+  <h3 class="sub" style="margin-top:0">Applies</h3>
+  <div class="notes">
+    <div class="note"><div class="tags"><span class="tag t-solid">In effect</span></div><p><strong>CMIA.</strong> You are a licensed provider. No disclosure of medical information without authorization unless an exception applies.</p></div>
+    <div class="note"><div class="tags"><span class="tag t-solid">In effect</span><span class="tag t-out">Web rule 2027-05-11</span></div><p><strong>ACA Section 1557, general rule.</strong> Nondiscrimination and meaningful access for people with limited English proficiency. Section 504 web accessibility (45 CFR 84.84) takes effect 2027-05-11 for recipients with 15 or more employees. It is an interim rule and dates may move. It reaches any member-facing web chat.</p></div>
+    <div class="note"><div class="tags"><span class="tag t-solid">In effect</span></div><p><strong>Information blocking rule and provider disincentives (45 CFR 171).</strong> As a provider, you may not limit access, exchange, or use of electronic health information, including AI outputs, without an exception.</p></div>
+    <div class="note"><div class="tags"><span class="tag t-solid">In effect</span><span class="tag t-flag">Partially verified</span></div><p><strong>Federal Wiretap Act.</strong> One-party consent, but California's all-party rule governs where a participant is in California.</p></div>
+    <div class="note"><div class="tags"><span class="tag t-solid">In effect</span><span class="tag t-soft">Guidance</span></div><p><strong>AB 316 and the California AG healthcare AI advisory.</strong> You can't argue the AI acted autonomously. The advisory is non-binding guidance that says consumer-protection and privacy laws apply to healthcare AI.</p></div>
+  </div>
+
+  <h3 class="sub">Depends on</h3>
+  <div class="notes">
+    <div class="note"><div class="tags"><span class="tag t-solid">In effect</span><span class="tag t-soft">Depends</span></div><p><strong>AB 489.</strong> Applies only if the first name or wording implies a licensed clinician. A human first name alone is not covered; "Nurse Ava" would be.</p></div>
+    <div class="note"><div class="tags"><span class="tag t-solid">In effect</span><span class="tag t-soft">Depends</span></div><p><strong>AB 2013.</strong> Applies only if you fine-tune a generative model and make it public. Your model is predictive, so probably not.</p></div>
+    <div class="note"><div class="tags"><span class="tag t-solid">In effect</span><span class="tag t-soft">Depends</span></div><p><strong>CMS interoperability and prior-authorization rule.</strong> It binds payers (Medicare Advantage, Medicaid, and Marketplace issuers on the federal exchange), not providers. Inference: it matters to you only if you perform utilization review for a payer. Covered California is a state exchange, so the federal-exchange wording may not reach those plans. Check with counsel.</p></div>
+  </div>
+</section>
+
+<section id="risks">
+  <div class="sec-head"><span class="num">3</span><h2>Risks and proposed edits</h2><p>Each risk is tied to your tool, followed by what to change and the guideline behind it.</p></div>
+
+  <div class="theme">
+    <h3>Bias and fairness</h3>
+
+    <article class="risk">
+      <div class="rhead"><h4>Cost or utilization used as a stand-in for health need</h4><span class="tag t-solid">High priority</span></div>
+      <div class="rgrid">
+        <div class="label">The risk</div><div>Your model is trained on a stand-in measure and uses past costs, zip code, and insurance type, so it scores people who got less care in the past as lower need. See case 1 in section 4.</div>
+        <div class="label">Proposed edits</div><div><ul>
+          <li>Write down why each target and input is a valid proxy.</li>
+          <li>Compare scores with a direct clinical measure.</li>
+          <li>Report score and selection rates by race, sex, age, language, and payer.</li>
+          <li>Re-check at each retrain.</li></ul></div>
+        <div class="label">Guidelines</div><div>Recommended by the <a href="https://assets.ctfassets.net/7s4afyr9pmov/6e7PrdrsNTQ5FjZ4uyRjTW/c4070131c523d4e1db26105aa51f087d/CHAI_Responsible-AI-Guide.pdf">CHAI Responsible AI Guide (2024), Fairness Stage 3</a> and NIST AI RMF MEASURE 2.11. Related law: 45 CFR 92.210.</div>
+      </div>
+    </article>
+
+    <article class="risk">
+      <div class="rhead"><h4>Performance reported only overall, not by subgroup</h4><span class="tag t-solid">High priority</span></div>
+      <div class="rgrid">
+        <div class="label">The risk</div><div>Overall accuracy can hide higher error rates for some groups, which here means wrongly denied or delayed coverage.</div>
+        <div class="label">Proposed edits</div><div><ul>
+          <li>Report error rates by race, sex, age, language, disability, and payer before go-live.</li>
+          <li>Set unacceptable gaps in advance.</li>
+          <li>Repeat after launch.</li></ul></div>
+        <div class="label">Guidelines</div><div>Recommended by <a href="https://www.fda.gov/media/153486/download">FDA/Health Canada/MHRA Good Machine Learning Practice, Principle 8</a>.</div>
+      </div>
+    </article>
+  </div>
+
+  <div class="theme">
+    <h3>Human oversight</h3>
+
+    <article class="risk">
+      <div class="rhead"><h4>Tool acts without a person able to stop it</h4><span class="tag t-solid">High priority</span></div>
+      <div class="rgrid">
+        <div class="label">The risk</div><div>Automatic coverage actions reach members before anyone reviews them. See cases 2 and 3 in section 4.</div>
+        <div class="label">Proposed edits</div><div><ul>
+          <li>Require review by a qualified person before any adverse or irreversible action.</li>
+          <li>Build an override and a stop switch with a named owner.</li>
+          <li>Log every automated action.</li></ul></div>
+        <div class="label">Guidelines</div><div>Recommended by <a href="https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf">NIST AI RMF 1.0, MAP 3.5 and MANAGE 2.4</a>.</div>
+      </div>
+    </article>
+
+    <article class="risk">
+      <div class="rhead"><h4>No appeal or override path</h4><span class="tag t-solid">High priority</span></div>
+      <div class="rgrid">
+        <div class="label">The risk</div><div>Members harmed by an automated determination can't challenge it.</div>
+        <div class="label">Proposed edits</div><div><ul>
+          <li>Publish a human-review route.</li>
+          <li>Let clinicians override without penalty and record the reasons.</li>
+          <li>Include appeal outcomes in monitoring.</li></ul></div>
+        <div class="label">Guidelines</div><div>Recommended by <a href="https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf">NIST AI RMF 1.0, MEASURE 3.3 and MANAGE 4.1</a>.</div>
+      </div>
+    </article>
+
+    <article class="risk">
+      <div class="rhead"><h4>Coverage decisions lean on the model instead of the individual</h4><span class="tag t-solid">High priority</span></div>
+      <div class="rgrid">
+        <div class="label">The risk</div><div>Relying on a score alone can overlook patients with complex needs, who are least able to appeal.</div>
+        <div class="label">Proposed edits</div><div><ul>
+          <li>Base each determination on the individual's record.</li>
+          <li>Track denial, overturn, and delay rates by subgroup.</li></ul></div>
+        <div class="label">Guidelines</div><div>Recommended by the <a href="https://assets.ctfassets.net/7s4afyr9pmov/6e7PrdrsNTQ5FjZ4uyRjTW/c4070131c523d4e1db26105aa51f087d/CHAI_Responsible-AI-Guide.pdf">CHAI Responsible AI Guide (2024), Stage 6</a>.</div>
+      </div>
+    </article>
+  </div>
+
+  <div class="theme">
+    <h3>Companion-style chat and transparency</h3>
+
+    <article class="risk">
+      <div class="rhead"><h4>Users form emotional dependence on the chatbot</h4><span class="tag t-solid">High priority</span></div>
+      <div class="rgrid">
+        <div class="label">The risk</div><div>A chat that remembers and sustains conversation can entangle lonely or vulnerable members.</div>
+        <div class="label">Proposed edits</div><div><ul>
+          <li>Limit relationship-style behavior.</li>
+          <li>Say it is AI at the start and periodically.</li>
+          <li>Flag heavy or late-night use and point to human support.</li></ul></div>
+        <div class="label">Guidelines</div><div>Recommended by <a href="https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf">NIST AI 600-1, section 2.7</a>. Related law: SB 243.</div>
+      </div>
+    </article>
+
+    <article class="risk">
+      <div class="rhead"><h4>Members not told AI is involved</h4><span class="tag t-solid">High priority</span></div>
+      <div class="rgrid">
+        <div class="label">The risk</div><div>Members who don't know AI is involved can't ask questions or opt out.</div>
+        <div class="label">Proposed edits</div><div><ul>
+          <li>Disclose AI use in plain language in every channel.</li>
+          <li>Offer a human alternative.</li></ul></div>
+        <div class="label">Guidelines</div><div>Recommended by <a href="https://digitalassets.jointcommission.org/api/public/content/dcfcf4f1a0cc45cdb526b3cb034c68c2">Joint Commission/CHAI guidance (2025), Element 2</a>.</div>
+      </div>
+    </article>
+  </div>
+
+  <div class="theme">
+    <h3>Privacy and security</h3>
+
+    <article class="risk">
+      <div class="rhead"><h4>Recording without notice or consent</h4><span class="tag t-solid">High priority</span></div>
+      <div class="rgrid">
+        <div class="label">The risk</div><div>Recording calls without all-party consent breaks California's rule.</div>
+        <div class="label">Proposed edits</div><div><ul>
+          <li>Announce recording and get consent before it starts.</li>
+          <li>Make withdrawal easy.</li>
+          <li>Log consent and set retention limits.</li></ul></div>
+        <div class="label">Guidelines</div><div>Recommended by <a href="https://digitalassets.jointcommission.org/api/public/content/dcfcf4f1a0cc45cdb526b3cb034c68c2">Joint Commission/CHAI guidance (2025), Element 2</a>. Related law: Penal Code 632.</div>
+      </div>
+    </article>
+
+    <article class="risk">
+      <div class="rhead"><h4>Patient data leaks through a vendor's systems</h4><span class="tag t-solid">High priority</span></div>
+      <div class="rgrid">
+        <div class="label">The risk</div><div>Substance use disorder records could flow to the vendor behind your base model.</div>
+        <div class="label">Proposed edits</div><div><ul>
+          <li>Sign business associate agreements limiting use, retention, and training.</li>
+          <li>Strip identifiers before sending data.</li>
+          <li>Verify where data is processed.</li></ul></div>
+        <div class="label">Guidelines</div><div>Recommended by <a href="https://digitalassets.jointcommission.org/api/public/content/dcfcf4f1a0cc45cdb526b3cb034c68c2">Joint Commission/CHAI guidance (2025), Element 3</a>.</div>
+      </div>
+    </article>
+  </div>
+
+  <h3 class="sub">Other risks</h3>
+  <div class="compact">
+    <p><span class="label">High, short form</span><span>Training data not matching members (compare mix with the population; FDA Good ML Practice Principle 3). No local validation (run a shadow period on your own members; CHAI). Drift after launch with only a partial monitoring plan (name an owner and metrics; FDA Good ML Practice Principle 10).</span></p>
+    <p><span class="label">Depends on an unknown</span><span>Users mistaking the tool for a clinician (depends on persona), re-identification, and memorization of sensitive data.</span></p>
+    <p><span class="label">Medium</span><span>Demographic inputs, test-data independence, out-of-scope use, input data quality, workflow fit, limits not communicated, language access, AI security attacks, baseline security, vendor opacity, vendor due diligence, accountability gap, risk assessment, independent review, clinician training, patient education, user feedback channel, staged pilot, rollback, opt-out.</span></p>
+    <p><span class="label">Low</span><span>Equity of access, data provenance, stakeholder engagement, fallback if the base model is withdrawn.</span></p>
+  </div>
+
+  <h3 class="sub">Governance basics</h3>
+  <div class="gov"><span class="tag t-out">Keep an AI inventory</span><span class="tag t-out">Name an accountable owner</span><span class="tag t-out">Track and report incidents</span></div>
+</section>
+
+<section id="cases">
+  <div class="sec-head"><span class="num">4</span><h2>Real-world cases</h2><p>Documented failures that share a feature with your tool. Each is linked to a risk above.</p></div>
+  <div class="tblwrap"><table class="tbl cases">
+    <thead><tr><th style="width:24%">Case</th><th>What happened</th><th style="width:26%">What it means for your tool</th><th style="width:15%">Evidence</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="case">1. Care-management risk algorithm</span><span class="sub-meta">Optum · 2019 · stand-in target</span></td>
+        <td data-h="What happened"><p>A widely used algorithm for picking patients for extra care predicted future cost. At the same risk score, Black patients were considerably sicker than White patients; the authors estimated that correcting this would raise the share of Black patients flagged from 17.7% to 46.5%.</p><p>Optum reran the analysis and worked with the researchers on non-cost measures.</p></td>
+        <td data-h="What it means for your tool">Your model is trained on a stand-in measure and uses past costs. Check what the target actually measures before launch.</td>
+        <td data-h="Evidence"><span class="tag t-solid">Established</span><span class="sub-meta"><a href="https://www.science.org/doi/10.1126/science.aax2342">Peer-reviewed study</a></span></td>
+      </tr>
+      <tr>
+        <td><span class="case">2. Medicaid budget formula</span><span class="sub-meta">Idaho · 2016 · no basis, no appeal</span></td>
+        <td data-h="What happened"><p>A class of about 4,000 people with developmental disabilities challenged Medicaid cuts set by the state's automated formulas, which the state called trade secrets. The court found the cuts arbitrary, held they violated due process, and ordered testing of the automated systems.</p></td>
+        <td data-h="What it means for your tool">Automatic coverage actions need a stated basis and a real way to contest them.</td>
+        <td data-h="Evidence"><span class="tag t-solid">Established</span><span class="sub-meta"><a href="https://www.aclu.org/press-releases/federal-court-rules-against-idaho-department-health-and-welfare-medicaid-class-action">Court ruling</a></span></td>
+      </tr>
+      <tr>
+        <td><span class="case">3. Post-acute care denials</span><span class="sub-meta">UnitedHealthcare · 2023 · coverage by model</span></td>
+        <td data-h="What happened"><p>A pending class action alleges UnitedHealthcare used the nH Predict tool to deny Medicare Advantage members' post-acute care regardless of treating physicians' recommendations. The court let contract claims proceed in 2025; the allegations have not been decided.</p></td>
+        <td data-h="What it means for your tool">If model output feeds coverage decisions, keep an individual clinical review and an appeal path.</td>
+        <td data-h="Evidence"><span class="tag t-soft">Alleged</span><span class="sub-meta"><a href="https://www.dlapiper.com/insights/publications/ai-outlook/2025/lawsuit-over-ai-usage-by-medicare-advantage-plans-allowed-to-proceed">Pending lawsuit</a></span></td>
+      </tr>
+      <tr>
+        <td><span class="case">4. Website chatbot</span><span class="sub-meta">Outside health · Air Canada · 2024</span></td>
+        <td data-h="What happened"><p>The airline's chatbot told a customer he could claim a bereavement fare after travel, contrary to policy. A tribunal rejected the argument that the chatbot was responsible for its own statements and held the airline liable.</p></td>
+        <td data-h="What it means for your tool">You answer for what your member-facing chat says. Test it against your actual policies.</td>
+        <td data-h="Evidence"><span class="tag t-solid">Established</span><span class="sub-meta"><a href="https://hullandhull.com/2024/02/booking-travel-usingbereavement-air-fare/">Tribunal decision</a></span></td>
+      </tr>
+    </tbody>
+  </table></div>
+  <p class="legend">Established: found by a peer-reviewed study, regulator, court, or the organization itself. Alleged: claimed in a lawsuit or complaint that has not been decided. Settled: resolved without a finding.</p>
+</section>
+
+<section id="na">
+  <div class="sec-head"><span class="num">5</span><h2>Considered, not applicable</h2><p>Laws a reader might expect to apply.</p></div>
+  <div class="tblwrap"><table class="tbl">
+    <thead><tr><th style="width:34%">Law</th><th>Why it does not apply</th></tr></thead>
+    <tbody>
+      <tr><td>SB 1120, physicians make utilization-review decisions</td><td>Applies to plans and the entities they delegate to. You are a provider using the tool for your own care. Inference: it applies if you perform utilization review on a plan's behalf.</td></tr>
+      <tr><td>AB 3030</td><td>Covers generative AI patient messages. Your model is predictive and a clinician reviews every message.</td></tr>
+      <tr><td>AB 1979 and SB 503</td><td>Clinical decision support rules. You didn't select that function.</td></tr>
+      <tr><td>CCPA and CPPA rules</td><td>Your data is protected health information, which is outside the CCPA.</td></tr>
+      <tr><td>Medicare Advantage rules (42 CFR 422.101 and CMS FAQ)</td><td>You selected no Medicare Advantage line.</td></tr>
+      <tr><td>HIPAA reproductive-health rule</td><td>Vacated by a court; not law.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="assumed">
+  <div class="sec-head"><span class="num">6</span><h2>What I assumed</h2><p>Correct anything that is wrong and the matches update.</p></div>
+  <ul class="assume">
+    <li><span class="tag t-solid">Given</span><span>You are a provider building in-house, not a vendor.</span></li>
+    <li><span class="tag t-solid">Given</span><span>The model is predictive, though you also selected open-ended chat that records conversations.</span></li>
+    <li><span class="tag t-soft">Inferred</span><span>Coverage actions are automatic, and patient messages are reviewed (from conflicting answers).</span></li>
+    <li><span class="tag t-solid">Given</span><span>No sale or sharing of data. The model is fixed after launch.</span></li>
+    <li><span class="tag t-solid">Given</span><span>No minors. California, 100,000+ people a year. $26–500M revenue.</span></li>
+    <li><span class="tag t-soft">Assumed</span><span>No local validation (from "overall accuracy only").</span></li>
+  </ul>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p><b>Scope.</b> The knowledge base covers California and federal law only. Other states, the EU AI Act, contracts, and payer policies are not covered. If you ask about developments after the knowledge base was built, it may not reflect them.</p>
+    <p><b>Screening tool, not legal advice.</b> A lawyer should confirm applicability before launch.</p>
+  </div>
+</footer>
